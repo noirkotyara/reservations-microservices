@@ -1,0 +1,27 @@
+# Dockerfile.dev
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY nest-cli.json tsconfig*.json ./
+
+# Copy monorepo folders
+COPY apps ./apps
+COPY libs ./libs
+
+# Install all dependencies (including dev dependencies)
+RUN pnpm install
+
+# Copy source (will also be overridden by volume for live changes)
+COPY src ./src
+
+# Expose ports: 3000 for app, 9229 for debugging
+EXPOSE 3000 9229
+
+# Start in development mode with watch
+CMD ["pnpm", "run", "start:dev"]
