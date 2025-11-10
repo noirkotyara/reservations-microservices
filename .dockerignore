@@ -1,26 +1,73 @@
+# Dependencies
 node_modules
-dist
-.git
-.gitignore
-.env
-.env.*
-*.log
 npm-debug.log*
 pnpm-debug.log*
-coverage
-.nyc_output
-.DS_Store
+yarn-error.log*
+
+# Build output
+dist
+*.tsbuildinfo
+tsconfig.build.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE and editor files
 .vscode
 .idea
+*.swp
+*.swo
+*~
+.DS_Store
 *.launch
 .settings
 *.sublime-workspace
+*.sublime-project
+
+# Testing
+coverage
+.nyc_output
+test
+*.test.ts
+*.spec.ts
+jest.config.js
+jest-e2e.json
+
+# Documentation
+*.md
+!README.md
+*.pdf
+docs
+
+# Logs
+*.log
+logs
+
+# Temporary files
 temp
 tmp
+*.tmp
 *.pid
 *.seed
 *.pid.lock
+
+# Docker files (no need to copy Docker files into Docker image)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+
+# Misc
 report.*.json
-*.pdf
-test
-tsconfig.build.tsbuildinfo
+*.bak

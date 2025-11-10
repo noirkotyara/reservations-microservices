@@ -16,7 +16,7 @@ export class ReservationsService {
     const reservation = await this.reservationsRepository.create({
       ...createReservationDto,
       timestamp: new Date(),
-      userId: '123',
+      placeId: '123',
     });
     return reservation;
   }

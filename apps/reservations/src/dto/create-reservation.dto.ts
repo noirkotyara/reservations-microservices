@@ -1,7 +1,22 @@
+import { IsDate, IsNotEmpty, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+
 export class CreateReservationDto {
-  timestamp: Date;
+  @IsDate()
+  @IsNotEmpty()
+  @Type(() => Date)
   startDate: Date;
+
+  @IsDate()
+  @IsNotEmpty()
+  @Type(() => Date)
   endDate: Date;
-  userId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  placeId: string;
+
+  @IsString()
+  @IsNotEmpty()
   invoiceId: string;
 }

@@ -1,4 +1,20 @@
+# =============================================================================
+# Docker Compose - Production/Base Configuration
+# =============================================================================
+# This is the base configuration file that defines production settings.
+# For development, docker-compose.override.yml is automatically applied.
+#
+# Usage:
+#   Development: docker compose up (automatically uses override)
+#   Production:  docker compose -f docker-compose.yml up
+# =============================================================================
+
+version: '3.8'
+
 services:
+  # ---------------------------------------------------------------------------
+  # MongoDB Database Service
+  # ---------------------------------------------------------------------------
   mongodb:
     image: mongo:8.0
     container_name: reservations-mongodb
@@ -19,11 +35,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
+  # ---------------------------------------------------------------------------
+  # Application Service (Production)
+  # ---------------------------------------------------------------------------
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      target: production
+      args:
+        NODE_ENV: production
+    image: reservations-app:latest
     container_name: reservations-app
     restart: unless-stopped
     ports:
@@ -32,19 +56,41 @@ services:
       - .env
     environment:
       PORT: ${APP_PORT:-3000}
+      NODE_ENV: production
       MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${MONGO_DATABASE:-reservations}?authSource=admin
     depends_on:
       mongodb:
         condition: service_healthy
     networks:
       - reservations-network
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
+# -----------------------------------------------------------------------------
+# Volumes
+# -----------------------------------------------------------------------------
 volumes:
   mongodb_data:
     driver: local
+    name: reservations_mongodb_data
   mongodb_config:
     driver: local
+    name: reservations_mongodb_config
 
+# -----------------------------------------------------------------------------
+# Networks
+# -----------------------------------------------------------------------------
 networks:
   reservations-network:
     driver: bridge
+    name: reservations_network

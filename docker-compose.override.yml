@@ -1,0 +1,75 @@
+# =============================================================================
+# Docker Compose - Development Overrides
+# =============================================================================
+# This file is automatically loaded by Docker Compose in development.
+# It overrides settings from docker-compose.yml for local development.
+#
+# Features:
+#   - Hot reload with volume mounts
+#   - Debug port exposure (9229)
+#   - Development-specific settings
+#   - Separate volumes to avoid conflicts
+#
+# Usage:
+#   Development: docker compose up (automatically applies this file)
+#   To exclude:  docker compose -f docker-compose.yml up
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # MongoDB - Development Overrides
+  # ---------------------------------------------------------------------------
+  mongodb:
+    container_name: reservations-mongodb-dev
+    volumes:
+      - mongodb_data_dev:/data/db
+      - mongodb_config_dev:/data/configdb
+    networks:
+      - reservations-network-dev
+
+  # ---------------------------------------------------------------------------
+  # Application - Development Overrides
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      target: development
+      args:
+        NODE_ENV: development
+    image: reservations-app:dev
+    container_name: reservations-app-dev
+    ports:
+      - '${APP_PORT:-3000}:3000'
+      - '${DEBUG_PORT:-9229}:9229' # Node.js debugger port
+    environment:
+      NODE_ENV: development
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Prevent node_modules and dist from being overwritten
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - reservations-network-dev
+    # Override command to use debug mode
+    command: pnpm run start:debug
+
+# -----------------------------------------------------------------------------
+# Development Volumes (separate from production)
+# -----------------------------------------------------------------------------
+volumes:
+  mongodb_data_dev:
+    driver: local
+    name: reservations_mongodb_data_dev
+  mongodb_config_dev:
+    driver: local
+    name: reservations_mongodb_config_dev
+
+# -----------------------------------------------------------------------------
+# Development Network (separate from production)
+# -----------------------------------------------------------------------------
+networks:
+  reservations-network-dev:
+    driver: bridge
+    name: reservations_network_dev

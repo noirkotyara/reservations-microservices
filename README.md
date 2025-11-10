@@ -33,78 +33,86 @@ $ pnpm install
 
 ## Docker Setup
 
-### Using Environment Variables
+This project uses a consolidated Docker configuration with multi-stage builds and automatic environment detection. See [DOCKER.md](./DOCKER.md) for detailed documentation.
 
-Both `docker-compose.yml` (production) and `docker-compose.dev.yml` (development) support environment variables. Create a `.env` file in the root directory with the following variables:
+### Quick Start
+
+**Development Mode** (with hot reload and debugging):
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Start all services (automatically uses development settings)
+docker compose up
+
+# Or in detached mode
+docker compose up -d
+
+# View logs
+docker compose logs -f app
+```
+
+**Production Mode**:
+```bash
+# Start in production mode
+docker compose -f docker-compose.yml up -d
+```
+
+### Key Features
+
+**Development Mode:**
+- ✅ Hot reload (code changes reflected immediately)
+- ✅ Debug port exposed (9229) for VS Code debugging
+- ✅ Source code mounted as volumes
+- ✅ Separate dev containers and volumes
+- ✅ Fast iteration without rebuilds
+
+**Production Mode:**
+- ✅ Multi-stage optimized build
+- ✅ Non-root user for security
+- ✅ Health checks configured
+- ✅ Minimal image size
+- ✅ Production dependencies only
+
+### Environment Variables
+
+Create a `.env` file in the root directory (or copy from `.env.example`):
 
 ```env
-# MongoDB Configuration
+# Application
+APP_PORT=3000
+NODE_ENV=development
+
+# MongoDB
 MONGO_ROOT_USERNAME=admin
 MONGO_ROOT_PASSWORD=password
 MONGO_DATABASE=reservations
 MONGODB_PORT=27017
 
-# Application Configuration
-APP_PORT=3000
+# Debug (Development only)
 DEBUG_PORT=9229
-NODE_ENV=development
 ```
 
-**Methods to use environment variables in docker-compose:**
-
-1. **`.env` file (automatic)** - Docker Compose automatically reads `.env` file from the same directory
-2. **Variable substitution** - Use `${VARIABLE:-default}` syntax in docker-compose.yml
-3. **env_file directive** - Explicitly specify env files per service
-4. **Environment variables** - Set them in your shell before running docker-compose
-
-### Development Setup
-
-Use `docker-compose.dev.yml` for local development with hot reload and debugging:
+### Common Commands
 
 ```bash
-# Start development environment (MongoDB + App with hot reload)
-docker-compose -f docker-compose.dev.yml up -d
+# Stop all services
+docker compose down
 
-# View logs
-docker-compose -f docker-compose.dev.yml logs -f app
+# Rebuild and restart
+docker compose up --build
 
-# Stop development environment
-docker-compose -f docker-compose.dev.yml down
+# View running containers
+docker compose ps
 
-# Stop and remove volumes (clears MongoDB data)
-docker-compose -f docker-compose.dev.yml down -v
+# Execute command in container
+docker compose exec app sh
+
+# MongoDB only (for local development)
+docker compose up mongodb -d
 ```
 
-**Development Features:**
-
-- ✅ Hot reload (code changes reflected immediately)
-- ✅ Debug port exposed (9229) for VS Code debugging
-- ✅ Source code mounted as volumes
-- ✅ Separate dev containers and volumes
-
-### Production Setup
-
-Use `docker-compose.yml` for production builds:
-
-```bash
-# Start production environment
-docker-compose up -d
-
-# Stop production environment
-docker-compose down
-```
-
-### MongoDB Only
-
-If you only want to run MongoDB and develop locally (without Docker for the app):
-
-```bash
-# Start only MongoDB
-docker-compose up -d mongodb
-
-# Stop MongoDB
-docker-compose down
-```
+For more detailed Docker instructions, troubleshooting, and best practices, see **[DOCKER.md](./DOCKER.md)**.
 
 ## Compile and run the project
 
