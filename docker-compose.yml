@@ -38,24 +38,24 @@ services:
       start_period: 10s
 
   # ---------------------------------------------------------------------------
-  # Application Service (Production)
+  # Reservations Service (Production)
   # ---------------------------------------------------------------------------
-  app:
+  reservations:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: apps/reservations/Dockerfile
       target: production
       args:
         NODE_ENV: production
-    image: reservations-app:latest
-    container_name: reservations-app
+    image: reservations-service:latest
+    container_name: reservations-service
     restart: unless-stopped
     ports:
-      - '${APP_PORT:-3000}:3000'
+      - '${RESERVATIONS_PORT:-3000}:3000'
     env_file:
-      - .env
+      - apps/reservations/.env
     environment:
-      PORT: ${APP_PORT:-3000}
+      PORT: ${RESERVATIONS_PORT:-3000}
       NODE_ENV: production
       MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${MONGO_DATABASE:-reservations}?authSource=admin
     depends_on:
@@ -70,6 +70,45 @@ services:
           'node',
           '-e',
           "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+  # ---------------------------------------------------------------------------
+  # Auth Service (Production)
+  # ---------------------------------------------------------------------------
+  auth:
+    build:
+      context: .
+      dockerfile: apps/auth/Dockerfile
+      target: production
+      args:
+        NODE_ENV: production
+    image: auth-service:latest
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - '${AUTH_PORT:-3001}:3001'
+    env_file:
+      - apps/auth/.env
+    environment:
+      PORT: ${AUTH_PORT:-3001}
+      NODE_ENV: production
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${MONGO_DATABASE:-reservations}?authSource=admin
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - reservations-network
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
         ]
       interval: 30s
       timeout: 3s

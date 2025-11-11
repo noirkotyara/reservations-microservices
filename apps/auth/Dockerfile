@@ -1,9 +1,9 @@
 # =============================================================================
-# Multi-stage Dockerfile for both Development and Production
+# Multi-stage Dockerfile for Auth Service
 # =============================================================================
 # Usage:
-#   Development: docker build --target development -t app:dev .
-#   Production:  docker build --target production -t app:prod .
+#   Development: docker build --target development -t auth:dev .
+#   Production:  docker build --target production -t auth:prod .
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -41,13 +41,13 @@ FROM dependencies AS development
 COPY src ./src
 
 # Expose application port and debugger port
-EXPOSE 3000 9229
+EXPOSE 3001 9230
 
 # Set development environment
 ENV NODE_ENV=development
 
 # Start application in development mode with watch
-CMD ["pnpm", "run", "start:debug"]
+CMD ["pnpm", "run", "start:debug", "auth"]
 
 # -----------------------------------------------------------------------------
 # Builder stage: Build the application for production
@@ -58,7 +58,7 @@ FROM dependencies AS builder
 COPY src ./src
 
 # Build the application
-RUN pnpm run build
+RUN pnpm run build auth
 
 # Prune development dependencies
 RUN pnpm prune --prod --no-optional
@@ -77,30 +77,30 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001
 
-# Copy package files
+# Copy only necessary files for runtime
 COPY --chown=nestjs:nodejs package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY --chown=nestjs:nodejs nest-cli.json tsconfig*.json ./
-
-# Copy workspace structure (package.json files)
-COPY --chown=nestjs:nodejs apps ./apps
-COPY --chown=nestjs:nodejs libs ./libs
 
 # Copy production dependencies and built application from builder
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 
+# Copy only the package.json files for workspace structure (needed for pnpm)
+COPY --from=builder --chown=nestjs:nodejs /app/apps/auth/package.json ./apps/auth/package.json
+COPY --from=builder --chown=nestjs:nodejs /app/libs/common/package.json ./libs/common/package.json
+
 # Switch to non-root user
 USER nestjs
 
 # Expose application port
-EXPOSE 3000
+EXPOSE 3001
 
 # Set production environment
 ENV NODE_ENV=production
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+    CMD node -e "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Start the application
-CMD ["node", "dist/apps/reservations/main"]
+CMD ["node", "dist/apps/auth/main"]
+

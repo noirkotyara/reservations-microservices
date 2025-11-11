@@ -26,7 +26,7 @@ export class ReservationsService {
   }
 
   async findOne(id: string): Promise<ReservationDocument> {
-    return this.reservationsRepository.findOne({ _id: id });
+    return this.reservationsRepository.findOneById(id);
   }
 
   async update(

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
-import { ConfigModule } from '../config/config.module';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import Joi from 'joi';
 
 const PINO_CONFIG = {
   production: {
@@ -20,7 +20,15 @@ const PINO_CONFIG = {
 @Module({
   imports: [
     PinoLoggerModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          envFilePath: '.env',
+          validationSchema: Joi.object({
+            NODE_ENV: Joi.string().required(),
+          }),
+        }),
+      ],
       useFactory: (configService: ConfigService) => {
         const configSettings =
           PINO_CONFIG[

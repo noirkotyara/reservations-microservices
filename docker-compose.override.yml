@@ -30,18 +30,18 @@ services:
       - reservations-network-dev
 
   # ---------------------------------------------------------------------------
-  # Application - Development Overrides
+  # Reservations Service - Development Overrides
   # ---------------------------------------------------------------------------
-  app:
+  reservations:
     build:
       target: development
       args:
         NODE_ENV: development
-    image: reservations-app:dev
-    container_name: reservations-app-dev
+    image: reservations-service:dev
+    container_name: reservations-service-dev
     ports:
-      - '${APP_PORT:-3000}:3000'
-      - '${DEBUG_PORT:-9229}:9229' # Node.js debugger port
+      - '${RESERVATIONS_PORT:-3000}:3000'
+      - '${RESERVATIONS_DEBUG_PORT:-9229}:9229' # Node.js debugger port (host:container)
     environment:
       NODE_ENV: development
     volumes:
@@ -52,8 +52,34 @@ services:
       - /app/dist
     networks:
       - reservations-network-dev
-    # Override command to use debug mode
-    command: pnpm run start:debug
+    # Override command to use debug mode - inspect binds to 0.0.0.0:9229 for Docker
+    command: pnpm exec nest start reservations --debug 0.0.0.0:9229 --watch
+
+  # ---------------------------------------------------------------------------
+  # Auth Service - Development Overrides
+  # ---------------------------------------------------------------------------
+  auth:
+    build:
+      target: development
+      args:
+        NODE_ENV: development
+    image: auth-service:dev
+    container_name: auth-service-dev
+    ports:
+      - '${AUTH_PORT:-3001}:3001'
+      - '${AUTH_DEBUG_PORT:-9230}:9230' # Node.js debugger port (host:container)
+    environment:
+      NODE_ENV: development
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Prevent node_modules and dist from being overwritten
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - reservations-network-dev
+    # Override command to use debug mode - inspect binds to 0.0.0.0:9230 for Docker
+    command: pnpm exec nest start auth --debug 0.0.0.0:9230 --watch
 
 # -----------------------------------------------------------------------------
 # Development Volumes (separate from production)

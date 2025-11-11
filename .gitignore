@@ -42,6 +42,10 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
+# App-specific environment files (keep .env.example for templates)
+apps/**/.env
+!apps/**/.env.example
+
 # temp directory
 .temp
 .tmp
