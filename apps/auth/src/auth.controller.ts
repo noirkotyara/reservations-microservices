@@ -19,10 +19,4 @@ export class AuthController {
 
     res.send(userPayload);
   }
-
-  // @UseGuards(LocalAuthGuard)
-  // @Post('auth/logout')
-  // async logout(@Req() req) {
-  //   return req.logout();
-  // }
 }
